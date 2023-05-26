@@ -1,0 +1,39 @@
+version: "3"
+services:
+  shinobi:
+    image: registry.gitlab.com/shinobi-systems/shinobi:dev
+    container_name: Shinobi
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    environment:
+      - PLUGIN_KEYS={}
+      - SSL_ENABLED=false
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${PWD}/data/config:/config
+      - ${PWD}/data/customAutoLoad:/home/Shinobi/libs/customAutoLoad
+      - ${PWD}/data/database:/var/lib/mysql
+      - ${PWD}/data/videos:/home/Shinobi/videos
+      - ${PWD}/data/plugins:/home/Shinobi/plugins
+      - /dev/shm/Shinobi/streams:/dev/shm/streams
+    # ports:
+    #   - 8102:8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shinobi.entrypoints=http"
+      - "traefik.http.routers.shinobi.rule=Host(`shinobi.${URL}`)"
+      - "traefik.http.middlewares.shinobi-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.shinobi.middlewares=shinobi-https-redirect"
+      - "traefik.http.routers.shinobi-secure.entrypoints=https"
+      - "traefik.http.routers.shinobi-secure.rule=Host(`shinobi.local.waylonwalker.com`)"
+      - "traefik.http.routers.shinobi-secure.tls=true"
+      - "traefik.http.routers.shinobi-secure.service=shinobi"
+      - "traefik.http.services.shinobi.loadbalancer.server.port=8080"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

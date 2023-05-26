@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  wyze-bridge:
+    image: mrlt8/wyze-bridge:latest
+    container_name: wyze-bridge
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    # ports:
+    # - 1935:6100
+    # - 8554:6102
+    # - 8888:6103
+    # - 5000:6104
+    environment:
+      - QUALITY=SD30
+      - WYZE_EMAIL=quadmx08@gmail.com
+      - WYZE_PASSWORD=${WYZE_PASSWORD}
+      - SNAPSHOT=RTSP1
+      - IMG_DIR=/img/
+      - TZ=America/Chicago
+      - RECORD_ALL=True
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${PWD}/wyze-bridge/data/cams/img:/img
+      - ${PWD}/wyze-bridge/data/record:/record
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cams.entrypoints=http"
+      - "traefik.http.routers.cams.rule=Host(`cams.${URL}`)"
+      - "traefik.http.middlewares.cams-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.cams.middlewares=cams-https-redirect"
+      - "traefik.http.routers.cams-secure.entrypoints=https"
+      - "traefik.http.routers.cams-secure.rule=Host(`cams.local.waylonwalker.com`)"
+      - "traefik.http.routers.cams-secure.tls=true"
+      - "traefik.http.routers.cams-secure.service=cams"
+      - "traefik.http.services.cams.loadbalancer.server.port=5000"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

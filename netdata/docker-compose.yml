@@ -1,0 +1,36 @@
+version: "3"
+services:
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    # ports:
+    #   - 19999:19999
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      - proxy
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.netdata.entrypoints=http"
+      - "traefik.http.routers.netdata.rule=Host(`netdata.${URL}`)"
+      - "traefik.http.middlewares.netdata-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.netdata.middlewares=netdata-https-redirect"
+      - "traefik.http.routers.netdata-secure.entrypoints=https"
+      - "traefik.http.routers.netdata-secure.rule=Host(`netdata.local.waylonwalker.com`)"
+      - "traefik.http.routers.netdata-secure.tls=true"
+      - "traefik.http.routers.netdata-secure.service=netdata"
+      - "traefik.http.services.netdata.loadbalancer.server.port=19999"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true
