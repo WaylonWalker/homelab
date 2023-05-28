@@ -1,10 +1,10 @@
 version: "3"
+
 services:
   netdata:
     image: netdata/netdata
     container_name: netdata
-    # ports:
-    #   - 19999:19999
+    restart: unless-stopped
     cap_add:
       - SYS_PTRACE
     networks:
@@ -25,7 +25,7 @@ services:
       - "traefik.http.middlewares.netdata-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.routers.netdata.middlewares=netdata-https-redirect"
       - "traefik.http.routers.netdata-secure.entrypoints=https"
-      - "traefik.http.routers.netdata-secure.rule=Host(`netdata.local.waylonwalker.com`)"
+      - "traefik.http.routers.netdata-secure.rule=Host(`netdata.${URL}`)"
       - "traefik.http.routers.netdata-secure.tls=true"
       - "traefik.http.routers.netdata-secure.service=netdata"
       - "traefik.http.services.netdata.loadbalancer.server.port=19999"

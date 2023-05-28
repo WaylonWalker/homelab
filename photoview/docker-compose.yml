@@ -9,14 +9,14 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-    environment:
-      - MYSQL_DATABASE=photoview
-      - MYSQL_USER=photoview
-      - MYSQL_PASSWORD=photosecret
-      - MYSQL_RANDOM_ROOT_PASSWORD=1
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - db_data:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${PHOTOVIEW_MYSQL_DATABASE}
+      - MYSQL_USER=${PHOTOVIEW_MYSQL_USER}
+      - MYSQL_RANDOM_ROOT_PASSWORD=${PHOTOVIEW_MYSQL_RANDOM_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${PHOTOVIEW_MYSQL_PASSWORD}
 
   photoview:
     image: viktorstrate/photoview:2
@@ -64,7 +64,7 @@ services:
       - "traefik.http.middlewares.photoview-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.routers.photoview.middlewares=photoview-https-redirect"
       - "traefik.http.routers.photoview-secure.entrypoints=https"
-      - "traefik.http.routers.photoview-secure.rule=Host(`photoview.local.waylonwalker.com`)"
+      - "traefik.http.routers.photoview-secure.rule=Host(`photoview.${URL}`)"
       - "traefik.http.routers.photoview-secure.tls=true"
       - "traefik.http.routers.photoview-secure.service=photoview"
       - "traefik.http.services.photoview.loadbalancer.server.port=80"

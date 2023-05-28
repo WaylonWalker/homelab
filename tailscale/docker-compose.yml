@@ -1,0 +1,30 @@
+version: "3.3"
+
+services:
+  tailscale:
+    image: tailscale/tailscale
+    container_name: tailscaled
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    volumes:
+      - "/var/lib:/var/lib"
+      - "/dev/net/tun:/dev/net/tun"
+    # network_mode: host
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tailscale.entrypoints=http"
+      - "traefik.http.routers.tailscale.rule=Host(`tailscale.${URL}`)"
+      - "traefik.http.middlewares.tailscale-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.tailscale.middlewares=tailscale-https-redirect"
+      - "traefik.http.routers.tailscale-secure.entrypoints=https"
+      - "traefik.http.routers.tailscale-secure.rule=Host(`tailscale.${URL}`)"
+      - "traefik.http.routers.tailscale-secure.tls=true"
+      - "traefik.http.routers.tailscale-secure.service=tailscale"
+      - "traefik.http.services.tailscale.loadbalancer.server.port=9000"
+      - "traefik.docker.network=proxy"

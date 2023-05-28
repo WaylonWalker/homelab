@@ -9,14 +9,9 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-    # ports:
-    # - 1935:6100
-    # - 8554:6102
-    # - 8888:6103
-    # - 5000:6104
     environment:
       - QUALITY=SD30
-      - WYZE_EMAIL=quadmx08@gmail.com
+      - WYZE_EMAIL=${WYZE_EMAIL}
       - WYZE_PASSWORD=${WYZE_PASSWORD}
       - SNAPSHOT=RTSP1
       - IMG_DIR=/img/
@@ -34,7 +29,7 @@ services:
       - "traefik.http.middlewares.cams-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.routers.cams.middlewares=cams-https-redirect"
       - "traefik.http.routers.cams-secure.entrypoints=https"
-      - "traefik.http.routers.cams-secure.rule=Host(`cams.local.waylonwalker.com`)"
+      - "traefik.http.routers.cams-secure.rule=Host(`cams.${URL}`)"
       - "traefik.http.routers.cams-secure.tls=true"
       - "traefik.http.routers.cams-secure.service=cams"
       - "traefik.http.services.cams.loadbalancer.server.port=5000"

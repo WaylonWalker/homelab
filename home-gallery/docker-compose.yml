@@ -1,8 +1,7 @@
 version: "3.9"
+
 services:
   api:
-    # custom build via
-    #build: packages/api-server
     image: xemle/home-gallery-api-server
     container_name: home-gallery-api-server
     restart: unless-stopped
@@ -51,7 +50,7 @@ services:
       - "traefik.http.middlewares.home-gallery-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.routers.home-gallery.middlewares=home-gallery-https-redirect"
       - "traefik.http.routers.home-gallery-secure.entrypoints=https"
-      - "traefik.http.routers.home-gallery-secure.rule=Host(`home-gallery.local.waylonwalker.com`)"
+      - "traefik.http.routers.home-gallery-secure.rule=Host(`home-gallery.${URL}`)"
       - "traefik.http.routers.home-gallery-secure.tls=true"
       - "traefik.http.routers.home-gallery-secure.service=home-gallery"
       - "traefik.http.services.home-gallery.loadbalancer.server.port=3000"

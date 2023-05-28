@@ -13,7 +13,7 @@ services:
       - 80:80
       - 443:443
     environment:
-      - CF_API_EMAIL=waylon@waylonwalker.com
+      - CF_API_EMAIL=${CF_API_EMAIL}
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
       # - CF_API_KEY=YOUR_API_KEY
       # be sure to use the correct one depending on if you are using a token or key
