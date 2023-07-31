@@ -1,0 +1,52 @@
+# docker run --name synapse \
+#     -v ./synapse-data:/data \
+#     -p 8008:8008 \
+#     matrixdotorg/synapse:latest
+#
+version: "3"
+services:
+  synapse:
+    image: docker.io/matrixdotorg/synapse:latest
+    container_name: synapse
+    restart: unless-stopped
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ${PWD}/matrix/synapse-data:/data
+    depends_on:
+      - db
+    ports:
+      - 8448:8448/tcp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.synapse.entrypoints=http"
+      - "traefik.http.routers.synapse.rule=Host(`matrix.${URL}`)"
+      - "traefik.http.middlewares.synapse-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.synapse.middlewares=synapse-https-redirect"
+      - "traefik.http.routers.synapse-secure.entrypoints=https"
+      - "traefik.http.routers.synapse-secure.rule=Host(`matrix.${URL}`)"
+      - "traefik.http.routers.synapse-secure.tls=true"
+      - "traefik.http.routers.synapse-secure.service=synapse"
+      - "traefik.http.services.synapse.loadbalancer.server.port=8008"
+      - "traefik.docker.network=proxy"
+  db:
+    image: docker.io/postgres:12-alpine
+    container_name: synapse-db
+    # Change that password, of course!
+    environment:
+      - POSTGRES_USER=${SYNAPSE_POSTGRES_USER:-synapse}
+      - POSTGRES_PASSWORD=${SYNAPSE_POSTGRES_PASSWORD:-synapse}
+      # ensure the database gets created correctly
+      # https://matrix-org.github.io/synapse/latest/postgres.html#set-up-database
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      # You may store the database tables in a local folder..
+      - ${PWD}/matrix/schemas:/var/lib/postgresql/data
+      # .. or store them on some high performance storage for better results
+      # - /path/to/ssd/storage:/var/lib/postgresql/data
+
+networks:
+  proxy:
+    external: true
