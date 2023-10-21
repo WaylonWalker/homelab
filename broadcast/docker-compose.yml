@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  mc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - broadcast:latest
+    restart_policy:
+      condition: on-failure
+    ports:
+      - "4445:4445"
+    network_mode: host
+
+

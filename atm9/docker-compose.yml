@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  atm9:
+    name: atm9
+    image: itzg/minecraft-server
+    environment:
+      EULA: "true"
+      TYPE: "FORGE"
+      CF_SERVER_MOD: 'All+the+Mods+9-0.0.41.zip'
+      FORGE_VERSION: '47.1.3'
+      MEMORY: '2G'
+    ports:
+      - "25509:25565"
+    volumes:
+      - ./data:/data
+      - ./modpacks:/modpacks
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+volumes:
+  data:
+    external: true
+  mods:
+    external: true

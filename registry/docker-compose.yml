@@ -1,0 +1,16 @@
+version: '3'
+services:
+  registry:
+    image: registry
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/registry.password
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+    ports:
+      - "5555:5000"
+    restart: always
+    volumes:
+      - ./auth:/auth
+      - /mnt/vault/tatooine:/data
+ 
