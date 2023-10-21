@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: ./kompose convert
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-ui
+  name: registry-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: registry-ui
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: ./kompose convert
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/registry-ui-default: "true"
+        io.kompose.service: registry-ui
+    spec:
+      containers:
+        - env:
+            - name: CATALOG_ELEMENTS_LIMIT
+              value: "1000"
+            - name: CATALOG_MAX_BRANCHES
+              value: "1"
+            - name: CATALOG_MIN_BRANCHES
+              value: "1"
+            - name: DELETE_IMAGES
+              value: "true"
+            - name: NGINX_PROXY_PASS_URL
+              value: http://registry-ui.wayl.one
+            - name: REGISTRY_SECURED
+              value: "false"
+            - name: REGISTRY_TITLE
+              value: Docker Registry UI
+            - name: SHOW_CATALOG_NB_TAGS
+              value: "true"
+            - name: SHOW_CONTENT_DIGEST
+              value: "true"
+            - name: SINGLE_REGISTRY
+              value: "true"
+            - name: TAGLIST_PAGE_SIZE
+              value: "100"
+          image: joxit/docker-registry-ui:main
+          name: registry-ui
+          ports:
+            - containerPort: 80
+              hostPort: 5001
+              protocol: TCP
+          resources: {}
+      restartPolicy: Always
+status: {}
