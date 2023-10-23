@@ -4,6 +4,6 @@ convert:
 deploy:
     kubectl apply -f deployment.yaml
 viz:
-    k8sviz -n ntfy --kubeconfig ~/.config/kube/falcon-k3s.yaml -t png -o ntfy-k8s.png
+    k8sviz -n ntfy --kubeconfig $KUBECONFIG -t png -o ntfy-k8s.png
 restart:
     kubectl rollout restart -n ntfy deployment/ntfy
