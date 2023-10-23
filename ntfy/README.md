@@ -16,6 +16,13 @@ This service uses `just` cli to manage the deployment.
 just
 # list individual recipes
 just -l
+
+# Available recipes:
+#     convert
+#     default
+#     deploy
+#     restart
+#     viz
 ```
 
 ## viz
