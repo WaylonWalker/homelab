@@ -1,0 +1,31 @@
+default: cred convert deploy viz
+update: convert patch
+
+create-ns:
+    kubectl create ns syncthing
+cred:
+    kubectl get secret -n default regcred --output=yaml -o yaml | sed 's/namespace: default/namespace: syncthing/' | kubectl apply -n syncthing -f - && echo deployed secret || echo secret exists
+convert:
+    kompose convert -o deployment.yaml -n syncthing
+deploy:
+    kubectl apply -f deployment.yaml
+delete:
+    kubectl delete all --all -n syncthing --timeout=0s
+viz:
+    k8sviz -n syncthing --kubeconfig $KUBECONFIG -t png -o syncthing-k8s.png
+restart:
+    kubectl rollout restart -n syncthing deployment/syncthing
+
+patch:
+    kubectl patch -f deployment.yaml
+describe:
+    kubectl get deployment -n syncthing
+    kubectl get rs -n syncthing
+    kubectl get pod -n syncthing
+    kubectl get svc -n syncthing
+    kubectl get ing -n syncthing
+
+describe-pod:
+    kubectl describe pod -n syncthing
+logs:
+    kubectl logs --all-containers -l io.kompose.service=syncthing-wayl-one -n syncthing -f

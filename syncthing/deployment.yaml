@@ -1,0 +1,172 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n syncthing
+    kompose.service.expose: syncthing.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: syncthing
+  name: syncthing
+  namespace: syncthing
+spec:
+  ports:
+    - name: "8384"
+      port: 8384
+      targetPort: 8384
+    - name: "22000"
+      port: 22000
+      targetPort: 22000
+    - name: 22000-udp
+      port: 22000
+      protocol: UDP
+      targetPort: 22000
+    - name: "21027"
+      port: 21027
+      protocol: UDP
+      targetPort: 21027
+  selector:
+    io.kompose.service: syncthing
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: syncthing
+  namespace: syncthing
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n syncthing
+    kompose.service.expose: syncthing.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: syncthing
+  name: syncthing
+  namespace: syncthing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: syncthing
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n syncthing
+        kompose.service.expose: syncthing.wayl.one
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/proxy: "true"
+        io.kompose.service: syncthing
+    spec:
+      containers:
+        - env:
+            - name: PGID
+              value: "1000"
+            - name: PUID
+              value: "1000"
+            - name: TZ
+              value: America/Chicago
+          image: ghcr.io/linuxserver/syncthing
+          name: syncthing
+          ports:
+            - containerPort: 8384
+              protocol: TCP
+            - containerPort: 22000
+              protocol: TCP
+            - containerPort: 22000
+              protocol: UDP
+            - containerPort: 21027
+              protocol: UDP
+          resources: {}
+          volumeMounts:
+            - mountPath: /config
+              name: syncthing-config
+            - mountPath: /data
+              name: syncthing
+      restartPolicy: Always
+      volumes:
+        - name: syncthing-config
+          persistentVolumeClaim:
+            claimName: syncthing-config
+        - name: syncthing
+          persistentVolumeClaim:
+            claimName: syncthing
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n syncthing
+    kompose.service.expose: syncthing.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: syncthing
+  name: syncthing
+  namespace: syncthing
+spec:
+  rules:
+    - host: syncthing.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: syncthing
+                port:
+                  number: 8384
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: syncthing-config
+  name: syncthing-config
+  namespace: syncthing
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: syncthing
+  name: syncthing
+  namespace: syncthing
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+

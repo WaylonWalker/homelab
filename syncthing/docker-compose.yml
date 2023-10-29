@@ -4,7 +4,6 @@ services:
   syncthing:
     image: ghcr.io/linuxserver/syncthing
     container_name: syncthing
-    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     networks:
@@ -14,26 +13,21 @@ services:
       - PGID=1000
       - TZ=America/Chicago
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /tank/syncthing/config:/config
-      - /tank/syncthing:/data
-    # ports:
-    #   - 8384:8384
-    #   - 22000:22000
-    #   - 21027:21027/udp
+      - syncthing-config:/config
+      - syncthing:/data
+    ports:
+      - 8384
+      - 22000/tcp
+      - 22000/udp
+      - 21027/udp
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.syncthing.entrypoints=http"
-      - "traefik.http.routers.syncthing.rule=Host(`syncthing.${URL}`)"
-      - "traefik.http.middlewares.syncthing-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.syncthing.middlewares=syncthing-https-redirect"
-      - "traefik.http.routers.syncthing-secure.entrypoints=https"
-      - "traefik.http.routers.syncthing-secure.rule=Host(`syncthing.${URL}`)"
-      - "traefik.http.routers.syncthing-secure.tls=true"
-      - "traefik.http.routers.syncthing-secure.service=syncthing"
-      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
-      - "traefik.docker.network=proxy"
+      kompose.service.expose: syncthing.wayl.one
+      #   kompose.image-pull-secret: regcred
 
 networks:
   proxy:
     external: true
+
+volumes:
+  syncthing: {}
+  syncthing-config: {}
