@@ -4,30 +4,29 @@ services:
   photoview-db:
     image: mariadb:10.5
     container_name: photoview-db
-    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     networks:
       - proxy
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - db_data:/var/lib/mysql
+      - photoview-db-data:/var/lib/mysql
     environment:
-      - MYSQL_DATABASE=${PHOTOVIEW_MYSQL_DATABASE}
-      - MYSQL_USER=${PHOTOVIEW_MYSQL_USER}
-      - MYSQL_RANDOM_ROOT_PASSWORD=${PHOTOVIEW_MYSQL_RANDOM_ROOT_PASSWORD}
-      - MYSQL_PASSWORD=${PHOTOVIEW_MYSQL_PASSWORD}
+      - MYSQL_DATABASE=photoview
+      - MYSQL_USER=photoview
+      - MYSQL_RANDOM_ROOT_PASSWORD=photoview
+      - MYSQL_PASSWORD=photosecret
+    ports:
+      - 3306
 
   photoview:
     image: viktorstrate/photoview:2
     container_name: photoview
-    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     networks:
       - proxy
-    # ports:
-    #   - "8101:80"
+    ports:
+      - 80
     depends_on:
       - photoview-db
 
@@ -37,6 +36,7 @@ services:
       - PHOTOVIEW_LISTEN_IP=photoview
       - PHOTOVIEW_LISTEN_PORT=80
       - PHOTOVIEW_MEDIA_CACHE=/app/cache
+      - TZ=America/Chicago
 
       # Optional: If you are using Samba/CIFS-Share and experience problems with "directory not found"
       # Enable the following Godebug
@@ -48,32 +48,22 @@ services:
       # - MAPBOX_TOKEN=<YOUR TOKEN HERE>
 
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - api_cache:/app/cache
+      - photoview-cache:/app/cache
 
       # Change This: to the directory where your photos are located on your server.
       # If the photos are located at `/home/user/photos`, then change this value
       # to the following: `/home/user/photos:/photos:ro`.
       # You can mount multiple paths, if your photos are spread across multiple directories.
-      - /tank/syncthing/config:/photos:ro
+      - photoview:/photos
 
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.photoview.entrypoints=http"
-      - "traefik.http.routers.photoview.rule=Host(`photoview.${URL}`)"
-      - "traefik.http.middlewares.photoview-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.photoview.middlewares=photoview-https-redirect"
-      - "traefik.http.routers.photoview-secure.entrypoints=https"
-      - "traefik.http.routers.photoview-secure.rule=Host(`photoview.${URL}`)"
-      - "traefik.http.routers.photoview-secure.tls=true"
-      - "traefik.http.routers.photoview-secure.service=photoview"
-      - "traefik.http.services.photoview.loadbalancer.server.port=80"
-      - "traefik.docker.network=proxy"
+      kompose.service.expose: photoview.wayl.one
 
 networks:
   proxy:
     external: true
 
 volumes:
-  db_data:
-  api_cache:
+  photoview-db-data:
+  photoview-cache:
+  photoview:

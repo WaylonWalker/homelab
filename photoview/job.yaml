@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: myjob
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      containers:
+        - name: myjobcontainer
+          image: busybox
+          command: ["ls", "/"]
+      restartPolicy: Never
+  backoffLimit: 1

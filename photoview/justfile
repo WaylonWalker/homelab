@@ -1,0 +1,31 @@
+default: cred convert deploy viz
+update: convert patch
+
+create-ns:
+    kubectl create ns photoview
+cred:
+    kubectl get secret -n default regcred --output=yaml -o yaml | sed 's/namespace: default/namespace: photoview/' | kubectl apply -n photoview -f - && echo deployed secret || echo secret exists
+convert:
+    kompose convert -o deployment.yaml -n photoview
+deploy:
+    kubectl apply -f deployment.yaml
+delete:
+    kubectl delete all --all -n photoview --timeout=0s
+viz:
+    k8sviz -n photoview --kubeconfig $KUBECONFIG -t png -o photoview-k8s.png
+restart:
+    kubectl rollout restart -n photoview deployment/photoview
+
+patch:
+    kubectl patch -f deployment.yaml
+describe:
+    kubectl get deployment -n photoview
+    kubectl get rs -n photoview
+    kubectl get pod -n photoview
+    kubectl get svc -n photoview
+    kubectl get ing -n photoview
+
+describe-pod:
+    kubectl describe pod -n photoview
+logs:
+    kubectl logs --all-containers -l io.kompose.service=photoview-wayl-one -n photoview -f

@@ -1,0 +1,255 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n photoview
+    kompose.service.expose: photoview.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview
+  name: photoview
+  namespace: photoview
+spec:
+  ports:
+    - name: "80"
+      port: 80
+      targetPort: 80
+  selector:
+    io.kompose.service: photoview
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n photoview
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview-db
+  name: photoview-db
+  namespace: photoview
+spec:
+  ports:
+    - name: "3306"
+      port: 3306
+      targetPort: 3306
+  selector:
+    io.kompose.service: photoview-db
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: photoview
+  namespace: photoview
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n photoview
+    kompose.service.expose: photoview.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview
+  name: photoview
+  namespace: photoview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: photoview
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n photoview
+        kompose.service.expose: photoview.wayl.one
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/proxy: "true"
+        io.kompose.service: photoview
+    spec:
+      containers:
+        - env:
+            - name: PHOTOVIEW_DATABASE_DRIVER
+              value: mysql
+            - name: PHOTOVIEW_LISTEN_IP
+              value: photoview
+            - name: PHOTOVIEW_LISTEN_PORT
+              value: "80"
+            - name: PHOTOVIEW_MEDIA_CACHE
+              value: /app/cache
+            - name: PHOTOVIEW_MYSQL_URL
+              value: photoview:photosecret@tcp(photoview-db)/photoview
+            - name: TZ
+              value: America/Chicago
+          image: viktorstrate/photoview:2
+          name: photoview
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /app/cache
+              name: photoview-cache
+            - mountPath: /photos
+              name: photoview
+      restartPolicy: Always
+      volumes:
+        - name: photoview-cache
+          persistentVolumeClaim:
+            claimName: photoview-cache
+        - name: photoview
+          persistentVolumeClaim:
+            claimName: photoview
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n photoview
+    kompose.service.expose: photoview.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview
+  name: photoview
+  namespace: photoview
+spec:
+  rules:
+    - host: photoview.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: photoview
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview-cache
+  name: photoview-cache
+  namespace: photoview
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview
+  name: photoview
+  namespace: photoview
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n photoview
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview-db
+  name: photoview-db
+  namespace: photoview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: photoview-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n photoview
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/proxy: "true"
+        io.kompose.service: photoview-db
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_DATABASE
+              value: photoview
+            - name: MYSQL_PASSWORD
+              value: photosecret
+            - name: MYSQL_RANDOM_ROOT_PASSWORD
+              value: photoview
+            - name: MYSQL_USER
+              value: photoview
+          image: mariadb:10.5
+          name: photoview-db
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: photoview-db-data
+      restartPolicy: Always
+      volumes:
+        - name: photoview-db-data
+          persistentVolumeClaim:
+            claimName: photoview-db-data
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: photoview-db-data
+  name: photoview-db-data
+  namespace: photoview
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
