@@ -1,0 +1,32 @@
+default: cred convert deploy viz
+update: convert patch
+
+create-ns:
+    kubectl create ns minio
+cred:
+    kubectl get secret -n default regcred --output=yaml -o yaml | sed 's/namespace: default/namespace: minio/' | kubectl apply -n minio -f - && echo deployed secret || echo secret exists
+convert:
+    kompose convert -o deployment.yaml -n minio --replicas 3
+deploy:
+    kubectl apply -f deployment.yaml
+    kubectl apply -f ingress.yaml
+delete:
+    kubectl delete all --all -n minio --timeout=0s
+viz:
+    k8sviz -n minio --kubeconfig $KUBECONFIG -t png -o minio-k8s.png
+restart:
+    kubectl rollout restart -n minio deployment/sandcrawler
+
+patch:
+    kubectl patch -f deployment.yaml
+describe:
+    kubectl get deployment -n minio
+    kubectl get rs -n minio
+    kubectl get pod -n minio
+    kubectl get svc -n minio
+    kubectl get ing -n minio
+
+describe-pod:
+    kubectl describe pod -n minio
+logs:
+    kubectl logs --all-containers -l io.kompose.service=minio-wayl-one -n minio -f

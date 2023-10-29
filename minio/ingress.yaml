@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n minio --replicas 3
+    kompose.image-pull-secret: regcred
+    kompose.service.expose: minio.wayl.one, minio-ui.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: sandcrawler
+  name: sandcrawler
+  namespace: minio
+spec:
+  rules:
+    - host: minio.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: sandcrawler
+                port:
+                  number: 9000
+            path: /
+            pathType: Prefix
+    - host: minio-ui.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: sandcrawler
+                port:
+                  number: 9001
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}

@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n minio --replicas 3
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: sandcrawler
+  name: sandcrawler
+  namespace: minio
+spec:
+  ports:
+    - name: "9000"
+      port: 9000
+      targetPort: 9000
+    - name: "9001"
+      port: 9001
+      targetPort: 9001
+  selector:
+    io.kompose.service: sandcrawler
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: minio
+  namespace: minio
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n minio --replicas 3
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: sandcrawler
+  name: sandcrawler
+  namespace: minio
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      io.kompose.service: sandcrawler
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n minio --replicas 3
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/minio-default: "true"
+        io.kompose.service: sandcrawler
+    spec:
+      containers:
+        - args:
+            - server
+            - --console-address
+            - :9001
+            - /data
+          image: minio/minio
+          name: sandcrawler
+          ports:
+            - containerPort: 9000
+              protocol: TCP
+            - containerPort: 9001
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /data
+              name: minio-storage
+          envFrom:
+            - secretRef:
+                name: minio-secret
+      restartPolicy: Always
+      volumes:
+        - name: minio-storage
+          persistentVolumeClaim:
+            claimName: minio-storage
+
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: minio-storage
+  name: minio-storage
+  namespace: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
