@@ -1,0 +1,17 @@
+default: convert deploy viz
+
+regcred:
+    kubectl get secret -n default regcred --output=yaml -o yaml | sed 's/namespace: default/namespace: installer/' | kubectl apply -n installer -f - && echo deployed secret || echo secret exists
+build:
+    docker build -t registry.wayl.one/i .
+    docker push registry.wayl.one/i:latest
+    docker tag registry.wayl.one/i registry.wayl.one/i:$(date +%Y%m%d%H%M)
+    docker push registry.wayl.one/i:$(date +%Y%m%d%H%M)
+convert:
+    kompose convert -o deployment.yaml -n installer
+deploy:
+    kubectl apply -f deployment.yaml
+viz:
+    k8sviz -n installer --kubeconfig $KUBECONFIG -t png -o installer-k8s.png
+restart:
+    kubectl rollout restart -n installer deployment/installer

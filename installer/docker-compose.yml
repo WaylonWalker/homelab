@@ -2,33 +2,15 @@ version: "3"
 
 services:
   installer:
-    image: installer
-    build: ../installer
+    image: registry.wayl.one/installer
     container_name: installer
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - proxy
     ports:
-      - 3003:3003
+      - 3003
     environment:
       - HTTP_HOST=0.0.0.0
       - PORT=3003
       - USER=waylonwalker
+      - REPO=waylonwalker.com
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.installer.entrypoints=http"
-      - "traefik.http.routers.installer.rule=Host(`installer.${URL}`)"
-      - "traefik.http.middlewares.installer-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.installer.middlewares=installer-https-redirect"
-      - "traefik.http.routers.installer-secure.entrypoints=https"
-      - "traefik.http.routers.installer-secure.rule=Host(`installer.${URL}`)"
-      - "traefik.http.routers.installer-secure.tls=true"
-      - "traefik.http.routers.installer-secure.service=installer"
-      - "traefik.http.services.installer.loadbalancer.server.port=3003"
-      - "traefik.docker.network=proxy"
-
-networks:
-  proxy:
-    external: true
+      kompose.service.expose: installer.wayl.one,installer.k.waylonwalker.com,i.wayl.one,i.k.waylonwalker.com
+      kompose.image-pull-secret: regcred
