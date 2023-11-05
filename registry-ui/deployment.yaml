@@ -97,18 +97,6 @@ spec:
               value: /auth/registry.password
             - name: REGISTRY_AUTH_HTPASSWD_REALM
               value: Registry
-            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials
-              value: "[true]"
-            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers
-              value: "['Accept', 'Authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'X-Requested-With']"
-            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods
-              value: "[HEAD,GET,OPTIONS,DELETE]"
-            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin
-              value: "[https://registry-ui.wayl.one]"
-            - name: REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers
-              value: "[Docker-Content-Digest]"
-            - name: REGISTRY_HTTP_HEADERS_Access-Control-Max-Age
-              value: "[17280000]"
             - name: REGISTRY_STORAGE_DELETE_ENABLED
               value: "true"
             - name: REGISTRY_TITLE
@@ -126,6 +114,8 @@ spec:
               name: registry
             - mountPath: /auth
               name: registry-auth
+            - mountPath: /etc/docker/registry
+              name: registry-config
       restartPolicy: Always
       volumes:
         - name: registry
@@ -134,6 +124,9 @@ spec:
         - name: registry-auth
           persistentVolumeClaim:
             claimName: registry-auth
+        - name: registry-config
+          persistentVolumeClaim:
+            claimName: registry-config
 status: {}
 
 ---
@@ -171,6 +164,23 @@ spec:
 status: {}
 
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-config
+  name: registry-config
+  namespace: registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -185,7 +195,7 @@ metadata:
   name: registry-ui
   namespace: registry
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
       io.kompose.service: registry-ui
