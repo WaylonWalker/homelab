@@ -1,0 +1,31 @@
+default: cred convert deploy viz
+update: convert patch
+
+create-ns:
+    kubectl create ns vault
+cred:
+    kubectl get secret -n default regcred --output=yaml -o yaml | sed 's/namespace: default/namespace: vault/' | kubectl apply -n vault -f - && echo deployed secret || echo secret exists
+convert:
+    kompose convert -o deployment.yaml -n vault
+deploy:
+    kubectl apply -f deployment.yaml
+delete:
+    kubectl delete all --all -n vault --timeout=0s
+viz:
+    k8sviz -n vault --kubeconfig $KUBECONFIG -t png -o vault-k8s.png
+restart:
+    kubectl rollout restart -n vault deployment/vault
+
+patch:
+    kubectl patch -f deployment.yaml
+describe:
+    kubectl get deployment -n vault
+    kubectl get rs -n vault
+    kubectl get pod -n vault
+    kubectl get svc -n vault
+    kubectl get ing -n vault
+
+describe-pod:
+    kubectl describe pod -n vault
+logs:
+    kubectl logs --all-containers -l io.kompose.service=vault-wayl-one -n vault -f

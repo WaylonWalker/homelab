@@ -1,0 +1,110 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n vault
+    kompose.service.expose: vault.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: vault-server
+  name: vault-server
+  namespace: vault
+spec:
+  ports:
+    - name: "8200"
+      port: 8200
+      targetPort: 8200
+  selector:
+    io.kompose.service: vault-server
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: vault
+  namespace: vault
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n vault
+    kompose.service.expose: vault.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: vault-server
+  name: vault-server
+  namespace: vault
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: vault-server
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n vault
+        kompose.service.expose: vault.wayl.one
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/vault-default: "true"
+        io.kompose.service: vault-server
+    spec:
+      containers:
+        - env:
+            - name: VAULT_ADDR
+              value: http://0.0.0.0:8200
+            - name: VAULT_DEV_ROOT_TOKEN_ID
+              value: vault-plaintext-root-token
+          image: hashicorp/vault
+          name: vault-server
+          ports:
+            - containerPort: 8200
+              protocol: TCP
+          resources: {}
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+      restartPolicy: Always
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n vault
+    kompose.service.expose: vault.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: vault-server
+  name: vault-server
+  namespace: vault
+spec:
+  rules:
+    - host: vault.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: vault-server
+                port:
+                  number: 8200
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}
+
