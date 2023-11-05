@@ -1,0 +1,134 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n jupyter
+    kompose.service.expose: jupyter.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: jupyter
+  name: jupyter
+  namespace: jupyter
+spec:
+  ports:
+    - name: "8888"
+      port: 8888
+      targetPort: 8888
+  selector:
+    io.kompose.service: jupyter
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: jupyter
+  namespace: jupyter
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n jupyter
+    kompose.service.expose: jupyter.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: jupyter
+  name: jupyter
+  namespace: jupyter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: jupyter
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n jupyter
+        kompose.service.expose: jupyter.wayl.one
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/jupyter-default: "true"
+        io.kompose.service: jupyter
+    spec:
+      containers:
+        - args:
+            - jupyter
+            - lab
+            - --ip
+            - 0.0.0.0
+          env:
+            - name: PASSWORD
+              value: password
+          image: amalic/jupyterlab
+          name: jupyter
+          ports:
+            - containerPort: 8888
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /notebooks/jupyter
+              name: jupyter-data
+      restartPolicy: Always
+      volumes:
+        - name: jupyter-data
+          persistentVolumeClaim:
+            claimName: jupyter-data
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n jupyter
+    kompose.service.expose: jupyter.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: jupyter
+  name: jupyter
+  namespace: jupyter
+spec:
+  rules:
+    - host: jupyter.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: jupyter
+                port:
+                  number: 8888
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: jupyter-data
+  name: jupyter-data
+  namespace: jupyter
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+

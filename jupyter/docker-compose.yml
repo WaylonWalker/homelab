@@ -1,0 +1,18 @@
+# docker run -p 10000:8888 quay.io/jupyter/scipy-notebook:2023-10-31
+version: "2.1"
+services:
+  jupyter:
+    # image: quay.io/jupyter/scipy-notebook:2023-10-31
+    image: amalic/jupyterlab
+    container_name: jupyter
+    ports:
+      - 8888
+    environment:
+      - PASSWORD=password
+    volumes:
+      - jupyter-data:/notebooks/jupyter
+    labels:
+      kompose.service.expose: jupyter.wayl.one
+    command: ["jupyter", "lab", "--ip", "0.0.0.0"]
+volumes:
+  jupyter-data:
