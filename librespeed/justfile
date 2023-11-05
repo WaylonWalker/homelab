@@ -1,0 +1,9 @@
+default: convert deploy viz
+convert:
+    kompose convert -o deployment.yaml -n librespeed
+deploy:
+    kubectl apply -f deployment.yaml
+viz:
+    k8sviz -n librespeed --kubeconfig $KUBECONFIG -t png -o librespeed-k8s.png
+restart:
+    kubectl rollout restart -n librespeed deployment/librespeed

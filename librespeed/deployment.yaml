@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: librespeed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n librespeed
+    kompose.service.expose: librespeed.wayl.one,librespeed.k.waylonwalker.com
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: librespeed
+  name: librespeed
+  namespace: librespeed
+spec:
+  ports:
+    - name: "80"
+      port: 80
+      targetPort: 80
+  selector:
+    io.kompose.service: librespeed
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: librespeed
+  namespace: librespeed
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n librespeed
+    kompose.service.expose: librespeed.wayl.one,librespeed.k.waylonwalker.com
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: librespeed
+  name: librespeed
+  namespace: librespeed
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: librespeed
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n librespeed
+        kompose.service.expose: librespeed.wayl.one,librespeed.k.waylonwalker.com
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/librespeed-default: "true"
+        io.kompose.service: librespeed
+    spec:
+      containers:
+        - env:
+            - name: TZ
+              value: UTC
+          image: lscr.io/linuxserver/librespeed
+          name: librespeed
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources: {}
+      restartPolicy: Always
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n librespeed
+    kompose.service.expose: librespeed.wayl.one,librespeed.k.waylonwalker.com
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: librespeed
+  name: librespeed
+  namespace: librespeed
+spec:
+  rules:
+    - host: librespeed.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: librespeed
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+    - host: librespeed.k.waylonwalker.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: librespeed
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}

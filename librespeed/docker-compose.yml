@@ -4,28 +4,11 @@ services:
   librespeed:
     image: lscr.io/linuxserver/librespeed
     container_name: librespeed
-    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    networks:
-      - proxy
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${PWD}/data/librespeed/config:/config
-
+    ports:
+      - 80
+    environment:
+      - TZ=UTC # optional: set desired timezone
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.librespeed.entrypoints=http"
-      - "traefik.http.routers.librespeed.rule=Host(`librespeed.${URL}`)"
-      - "traefik.http.middlewares.librespeed-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.librespeed.middlewares=librespeed-https-redirect"
-      - "traefik.http.routers.librespeed-secure.entrypoints=https"
-      - "traefik.http.routers.librespeed-secure.rule=Host(`librespeed.${URL}`)"
-      - "traefik.http.routers.librespeed-secure.tls=true"
-      - "traefik.http.routers.librespeed-secure.service=librespeed"
-      - "traefik.http.services.librespeed.loadbalancer.server.port=80"
-      - "traefik.docker.network=proxy"
-
-networks:
-  proxy:
-    external: true
+      kompose.service.expose: librespeed.wayl.one,librespeed.k.waylonwalker.com
