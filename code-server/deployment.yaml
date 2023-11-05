@@ -1,0 +1,141 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n code-server
+    kompose.service.expose: code-server.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: code-server
+  name: code-server
+  namespace: code-server
+spec:
+  ports:
+    - name: "8443"
+      port: 8443
+      targetPort: 8443
+  selector:
+    io.kompose.service: code-server
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: code-server
+  namespace: code-server
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n code-server
+    kompose.service.expose: code-server.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: code-server
+  name: code-server
+  namespace: code-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: code-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n code-server
+        kompose.service.expose: code-server.wayl.one
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/code-server-default: "true"
+        io.kompose.service: code-server
+    spec:
+      containers:
+        - env:
+            - name: DEFAULT_WORKSPACE
+              value: /config/workspace
+            - name: PASSWORD
+              value: password
+            - name: PGID
+              value: "1000"
+            - name: PROXY_DOMAIN
+              value: code-server.wayl.one
+            - name: PUID
+              value: "1000"
+            - name: SUDO_PASSWORD
+              value: password
+            - name: TZ
+              value: Etc/UTC
+          image: lscr.io/linuxserver/code-server:latest
+          name: code-server
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /config
+              name: code-server-data
+      restartPolicy: Always
+      volumes:
+        - name: code-server-data
+          persistentVolumeClaim:
+            claimName: code-server-data
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n code-server
+    kompose.service.expose: code-server.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: code-server
+  name: code-server
+  namespace: code-server
+spec:
+  rules:
+    - host: code-server.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: code-server
+                port:
+                  number: 8443
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: code-server-data
+  name: code-server-data
+  namespace: code-server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+

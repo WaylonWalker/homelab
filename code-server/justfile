@@ -1,0 +1,9 @@
+default: convert deploy viz
+convert:
+    kompose convert -o deployment.yaml -n code-server
+deploy:
+    kubectl apply -f deployment.yaml
+viz:
+    k8sviz -n code-server --kubeconfig $KUBECONFIG -t png -o code-server-k8s.png
+restart:
+    kubectl rollout restart -n code-server deployment/code-server
