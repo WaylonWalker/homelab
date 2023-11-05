@@ -1,0 +1,35 @@
+default: cred convert deploy viz
+update: convert patch
+
+inspect:
+    kubectl apply -f pvc-inspector.yaml
+
+create-ns:
+    kubectl create ns registry
+cred:
+    kubectl get secret -n default regcred --output=yaml -o yaml | sed 's/namespace: default/namespace: registry/' | kubectl apply -n registry -f - && echo deployed secret || echo secret exists
+convert:
+    kompose convert -o deployment.yaml -n registry --replicas 4
+deploy:
+    kubectl apply -f deployment.yaml
+delete:
+    kubectl delete all --all -n registry --timeout=0s
+viz:
+    k8sviz -n registry --kubeconfig $KUBECONFIG -t png -o registry-k8s.png
+restart:
+    kubectl rollout restart -n registry deployment/registry-server
+    kubectl rollout restart -n registry deployment/registry-ui
+
+patch:
+    kubectl patch -f deployment.yaml
+describe:
+    kubectl get deployment -n registry
+    kubectl get rs -n registry
+    kubectl get pod -n registry
+    kubectl get svc -n registry
+    kubectl get ing -n registry
+
+describe-pod:
+    kubectl describe pod -n registry
+logs:
+    kubectl logs --all-containers -l io.kompose.service=registry-wayl-one -n registry -f

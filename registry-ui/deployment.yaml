@@ -1,0 +1,269 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n registry --replicas 4
+    kompose.service.expose: registry.wayl.one
+    kompose.service.type: loadbalancer
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-server-tcp
+  name: registry-server-tcp
+  namespace: registry
+spec:
+  ports:
+    - name: "5000"
+      port: 5000
+      targetPort: 5000
+  selector:
+    io.kompose.service: registry-server
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n registry --replicas 4
+    kompose.image-pull-secret: regcred
+    kompose.service.expose: registry-ui.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-ui
+  name: registry-ui
+  namespace: registry
+spec:
+  ports:
+    - name: "80"
+      port: 80
+      targetPort: 80
+  selector:
+    io.kompose.service: registry-ui
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: registry
+  namespace: registry
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n registry --replicas 4
+    kompose.service.expose: registry.wayl.one
+    kompose.service.type: loadbalancer
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-server
+  name: registry-server
+  namespace: registry
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      io.kompose.service: registry-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n registry --replicas 4
+        kompose.service.expose: registry.wayl.one
+        kompose.service.type: loadbalancer
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/registry-ui-default: "true"
+        io.kompose.service: registry-server
+    spec:
+      containers:
+        - env:
+            - name: REGISTRY_AUTH
+              value: htpasswd
+            - name: REGISTRY_AUTH_HTPASSWD_PATH
+              value: /auth/registry.password
+            - name: REGISTRY_AUTH_HTPASSWD_REALM
+              value: Registry
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials
+              value: "[true]"
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers
+              value: "['Accept', 'Authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'X-Requested-With']"
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods
+              value: "[HEAD,GET,OPTIONS,DELETE]"
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin
+              value: "[https://registry-ui.wayl.one]"
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers
+              value: "[Docker-Content-Digest]"
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Max-Age
+              value: "[17280000]"
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: "true"
+            - name: REGISTRY_TITLE
+              value: Waylon Walker's Docker Registry
+            - name: REGISTRY_URL
+              value: https://registry.wayl.one
+          image: registry:2.8.2
+          name: registry-server
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/registry
+              name: registry
+            - mountPath: /auth
+              name: registry-auth
+      restartPolicy: Always
+      volumes:
+        - name: registry
+          persistentVolumeClaim:
+            claimName: registry
+        - name: registry-auth
+          persistentVolumeClaim:
+            claimName: registry-auth
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry
+  name: registry
+  namespace: registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-auth
+  name: registry-auth
+  namespace: registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n registry --replicas 4
+    kompose.image-pull-secret: regcred
+    kompose.service.expose: registry-ui.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-ui
+  name: registry-ui
+  namespace: registry
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      io.kompose.service: registry-ui
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n registry --replicas 4
+        kompose.image-pull-secret: regcred
+        kompose.service.expose: registry-ui.wayl.one
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/registry-ui-default: "true"
+        io.kompose.service: registry-ui
+    spec:
+      containers:
+        - env:
+            - name: CATALOG_ELEMENTS_LIMIT
+              value: "1000"
+            - name: CATALOG_MAX_BRANCHES
+              value: "1"
+            - name: CATALOG_MIN_BRANCHES
+              value: "1"
+            - name: DELETE_IMAGES
+              value: "true"
+            - name: NGINX_PROXY_PASS_URL
+              value: https://registry.wayl.one
+            - name: REGISTRY_SECURED
+              value: "true"
+            - name: REGISTRY_TITLE
+              value: Waylon Walker's Docker Registry
+            - name: REGISTRY_URL
+              value: https://registry.wayl.one
+            - name: SHOW_CATALOG_NB_TAGS
+              value: "true"
+            - name: SHOW_CONTENT_DIGEST
+              value: "true"
+            - name: SINGLE_REGISTRY
+              value: "true"
+            - name: TAGLIST_PAGE_SIZE
+              value: "100"
+          image: joxit/docker-registry-ui:main
+          name: registry-ui
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources: {}
+      imagePullSecrets:
+        - name: regcred
+      restartPolicy: Always
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n registry --replicas 4
+    kompose.image-pull-secret: regcred
+    kompose.service.expose: registry-ui.wayl.one
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: registry-ui
+  name: registry-ui
+  namespace: registry
+spec:
+  rules:
+    - host: registry-ui.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: registry-ui
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}

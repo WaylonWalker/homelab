@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  registry-ui:
+    image: joxit/docker-registry-ui:main
+    restart: always
+    ports:
+      - 80
+    environment:
+      - SINGLE_REGISTRY=true
+      - REGISTRY_TITLE=Waylon Walker's Docker Registry
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+      - NGINX_PROXY_PASS_URL=https://registry.wayl.one
+      - REGISTRY_URL=https://registry.wayl.one
+      - SHOW_CATALOG_NB_TAGS=true
+      - CATALOG_MIN_BRANCHES=1
+      - CATALOG_MAX_BRANCHES=1
+      - TAGLIST_PAGE_SIZE=100
+      - REGISTRY_SECURED=true
+      - CATALOG_ELEMENTS_LIMIT=1000
+    container_name: registry-ui
+    labels:
+      kompose.service.expose: registry-ui.wayl.one
+      kompose.image-pull-secret: regcred
+      # kompose.service.expose.ingress-class-name: "nginx"
+      # nginx.ingress.kubernetes.io/auth-type: basic
+      # nginx.ingress.kubernetes.io/auth-secret: basic-auth
+      # nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - registry-ui"
+
+  registry-server:
+    image: registry:2.8.2
+    restart: always
+    ports:
+      - 5000
+    environment:
+      REGISTRY_TITLE: Waylon Walker's Docker Registry
+      REGISTRY_URL: https://registry.wayl.one
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: "[https://registry-ui.wayl.one]"
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: "[HEAD,GET,OPTIONS,DELETE]"
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials: "[true]"
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: "['Accept', 'Authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'X-Requested-With']"
+      REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers: "[Docker-Content-Digest]"
+      REGISTRY_HTTP_HEADERS_Access-Control-Max-Age: "[17280000]"
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/registry.password
+    volumes:
+      - registry:/var/lib/registry
+      - registry-auth:/auth
+      # - registry-config:/etc/docker/registry
+    container_name: registry-server
+    labels:
+      kompose.service.expose: registry.wayl.one
+      kompose.service.type: loadbalancer
+      # kompose.image-pull-secret: regcred
+      # kompose.service.expose.ingress-class-name: "nginx"
+      # kompose.service.type: nodeport
+
+      # kompose.service.nodeport.port: 30001
+      # nginx.ingress.kubernetes.io/auth-type: basic
+      # nginx.ingress.kubernetes.io/auth-secret: basic-auth
+      # nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - registry-server"
+      # traefik.ingress.kubernetes.io/router.tls: "true"
+      # traefik.ingress.kubernetes.io/buffering: |
+      #   maxrequestbodybytes: 20000000000
+      #   memrequestbodybytes: 20000000000
+      #   maxresponsebodybytes: 20000000000
+      #   memresponsebodybytes: 20000000000
+
+volumes:
+  registry:
+  registry-config:
+  registry-auth:
