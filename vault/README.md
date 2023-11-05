@@ -1,3 +1,3 @@
 ## hashicorp vault
 
-![](./vault.png)
+![](./vault-k8s.png)
