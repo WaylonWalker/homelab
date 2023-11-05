@@ -1,0 +1,9 @@
+build:
+    podman build . -t registry.wayl.one/dummypipe:alpine
+push:
+    podman push registry.wayl.one/dummypipe:alpine
+create-ns:
+    kubectl create ns jobrunner
+
+regcred:
+    kubectl get secret -n default regcred --output=yaml -o yaml | sed 's/namespace: default/namespace: jobrunner/' | kubectl apply -n jobrunner -f - && echo deployed secret || echo secret exists
