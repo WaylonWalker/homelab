@@ -1,55 +1,55 @@
 ## default
 
-![](default.png)
+![](./kubeviz/default.png)
 
 ## ntfy
 
-![](ntfy.png)
+![](./kubeviz/ntfy.png)
 
 ## minio
 
-![](minio.png)
+![](./kubeviz/minio.png)
 
 ## syncthing
 
-![](syncthing.png)
+![](./kubeviz/syncthing.png)
 
 ## photoview
 
-![](photoview.png)
+![](./kubeviz/photoview.png)
 
 ## shot
 
-![](shot.png)
+![](./kubeviz/shot.png)
 
 ## librespeed
 
-![](librespeed.png)
+![](./kubeviz/librespeed.png)
 
 ## matrix
 
-![](matrix.png)
+![](./kubeviz/matrix.png)
 
 ## code-server
 
-![](code-server.png)
+![](./kubeviz/code-server.png)
 
 ## jupyter
 
-![](jupyter.png)
+![](./kubeviz/jupyter.png)
 
 ## registry
 
-![](registry.png)
+![](./kubeviz/registry.png)
 
 ## installer
 
-![](installer.png)
+![](./kubeviz/installer.png)
 
 ## vault
 
-![](vault.png)
+![](./kubeviz/vault.png)
 
 ## jobrunner
 
-![](jobrunner.png)
+![](./kubeviz/jobrunner.png)
