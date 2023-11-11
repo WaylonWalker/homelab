@@ -1,0 +1,139 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n status
+    kompose.service.expose: status.wayl.one,status.k.waylonwalker.com
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: uptime-kuma
+  name: uptime-kuma
+  namespace: status
+spec:
+  ports:
+    - name: "3001"
+      port: 3001
+      targetPort: 3001
+  selector:
+    io.kompose.service: uptime-kuma
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: status
+  namespace: status
+spec: {}
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n status
+    kompose.service.expose: status.wayl.one,status.k.waylonwalker.com
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: uptime-kuma
+  name: uptime-kuma
+  namespace: status
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: uptime-kuma
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o deployment.yaml -n status
+        kompose.service.expose: status.wayl.one,status.k.waylonwalker.com
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/status-default: "true"
+        io.kompose.service: uptime-kuma
+    spec:
+      containers:
+        - env:
+            - name: TZ
+              value: UTC
+          image: louislam/uptime-kuma:1
+          name: status
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /app/data
+              name: uptime-kuma
+      restartPolicy: Always
+      volumes:
+        - name: uptime-kuma
+          persistentVolumeClaim:
+            claimName: uptime-kuma
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o deployment.yaml -n status
+    kompose.service.expose: status.wayl.one,status.k.waylonwalker.com
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: uptime-kuma
+  name: uptime-kuma
+  namespace: status
+spec:
+  rules:
+    - host: status.wayl.one
+      http:
+        paths:
+          - backend:
+              service:
+                name: uptime-kuma
+                port:
+                  number: 3001
+            path: /
+            pathType: Prefix
+    - host: status.k.waylonwalker.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: uptime-kuma
+                port:
+                  number: 3001
+            path: /
+            pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: uptime-kuma
+  name: uptime-kuma
+  namespace: status
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+

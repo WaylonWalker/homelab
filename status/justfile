@@ -1,0 +1,14 @@
+default: convert deploy viz
+
+create-ns:
+    kubectl create ns status
+convert:
+    kompose convert -o deployment.yaml -n status
+deploy:
+    kubectl apply -f deployment.yaml
+viz:
+    k8sviz -n status --kubeconfig $KUBECONFIG -t png -o status-k8s.png
+restart:
+    kubectl rollout restart -n status deployment/status
+delete:
+    kubectl delete all --all -n status --timeout=0s

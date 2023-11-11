@@ -1,0 +1,17 @@
+# docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:1
+version: "3"
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: status
+    ports:
+      - 3001
+    volumes:
+      - uptime-kuma:/app/data
+    restart: always
+    environment:
+      - TZ=UTC # optional: set desired timezone
+    labels:
+      kompose.service.expose: status.wayl.one,status.k.waylonwalker.com
+volumes:
+  uptime-kuma:
